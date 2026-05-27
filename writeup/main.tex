@@ -1,0 +1,68 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- Packages ---
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{cleveref}
+\usepackage[style=authoryear, backend=biber]{biblatex}
+\addbibresource{refs.bib}
+
+\geometry{margin=2.5cm}
+
+% --- Theorem environments ---
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+
+% --- Notation ---
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\ii}{\mathrm{i}}   % imaginary unit
+
+\title{\textbf{The Heston Stochastic Volatility Model}\\
+       \large Semi-Analytical Pricing, Monte Carlo Simulation, and Market Calibration}
+\author{Lucas Hutton}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% ===========================================================================
+\section{Introduction}
+% ===========================================================================
+% TODO: motivate stochastic volatility — the vol smile, limitations of BS.
+% Introduce the Heston model and what this write-up covers.
+
+
+% ===========================================================================
+\section{Mathematical Preliminaries}
+% ===========================================================================
+
+\subsection{Brownian Motion and It\^{o} Calculus}
+% TODO: define Brownian motion, state Itô's lemma (one and multi-dimensional).
+
+\subsection{Risk-Neutral Pricing and Girsanov's Theorem}
+% TODO: change of measure, fundamental theorem of asset pricing, the
+% risk-neutral expectation formula  C = e^{-rT} E^Q[payoff].
+
+
+% ===========================================================================
+\section{The Black--Scholes Model}
+% ===========================================================================
+% TODO: GBM, BS PDE, closed-form call formula, implied volatility, vol smile.
+% This section exists to motivate WHY we need stochastic vol.
+
+
+
+\end{document}
