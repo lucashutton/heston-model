@@ -2,6 +2,7 @@
 
 % --- Packages ---
 \usepackage{amsmath, amssymb, amsthm}
+\usepackage{enumitem}
 \usepackage{mathtools}
 \usepackage{hyperref}
 \usepackage{geometry}
@@ -21,6 +22,10 @@
 \newtheorem{definition}{Definition}
 \newtheorem{remark}{Remark}
 
+\numberwithin{equation}{subsection}
+\numberwithin{definition}{subsection}
+\numberwithin{theorem}{subsection}
+
 % --- Notation ---
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Q}{\mathbb{Q}}
@@ -31,7 +36,7 @@
 \title{\textbf{The Heston Stochastic Volatility Model}\\
        \large Semi-Analytical Pricing, Monte Carlo Simulation, and Market Calibration}
 \author{Lucas Hutton}
-\date{\today}
+\date{May--June 2026}
 
 \begin{document}
 \maketitle
@@ -41,28 +46,310 @@
 % ===========================================================================
 \section{Introduction}
 % ===========================================================================
-% TODO: motivate stochastic volatility — the vol smile, limitations of BS.
-% Introduce the Heston model and what this write-up covers.
+% TODO (Phase 5 — write last):
+%   - Motivate stochastic volatility: the empirical failure of Black-Scholes
+%     (vol smile, vol surface).
+%   - State what this paper does: derives, implements, and calibrates the
+%     Heston (1993) model.
+%   - Briefly outline the structure of the paper.
+%   - Include a real SPX implied vol surface plot as the opening figure.
 
 
 % ===========================================================================
 \section{Mathematical Preliminaries}
 % ===========================================================================
+% This section develops the mathematical language needed for the Heston model.
+% It should be concise -- background, not contribution.
 
-\subsection{Brownian Motion and It\^{o} Calculus}
-% TODO: define Brownian motion, state Itô's lemma (one and multi-dimensional).
+\subsection{Probability Theory and Stochastic Processes}
+
+The definitions and notation in this section follow \textcite{shreve2004}, Chapters 1--3.
+
+First, the probability measure.
+
+\begin{definition}
+Let \(\Omega\) be a nonempty set, \(\mathcal{F}\) be a \(\sigma\)-algebra of subsets of \(\Omega\), and \(\mathbb{P}\) be a probability measure over \(\mathcal{F}\). The triple \((\Omega, \mathcal{F},\mathbb{P})\) is called a \textup{probability space}.
+\end{definition}
+
+\begin{definition}
+Let \((\Omega, \mathcal{F},\mathbb{P})\) be a probability space. If a set \(A \in \mathcal{F}\) satisfies \(\mathbb{P}(A) = 1\), we say that the event A occurs \textup{almost surely}.
+\end{definition}
+
+We next formalise the concept of a stochastic process, the mathematical object used to model the random evolution of quantities such as asset prices.
+
+\begin{definition}
+Let \(\Omega\) be a nonempty set. Let T be a fixed positive number, and assume that for each \(t \in [0, T]\), there is a \(\sigma\)-algebra \(\mathcal{F}(t)\). Assume further that if \(s \leq t\), then every set in \(\mathcal{F}(s)\) is also in \(\mathcal{F}(t)\). Then we call the collection of \(\sigma\)-algebras \(\mathcal{F}(t)\), \(0 \leq t \leq T\), a \textup{filtration}.
+\end{definition}
+
+\begin{definition}
+Let \(\Omega\) be a nonempty sample space equipped with a filtration \(\mathcal{F}(t)\), \(0 \leq t \leq T\). Let \(X(t)\) be a collection of random variables indexed by \(t \in [0, T]\). We say this collection of random variables is an \textup{adapted stochastic process} if, for each t, the random variable \(X(t)\) is \(\mathcal{F}(t)\)-measurable.
+\end{definition}
+
+In the context of continuous-time mathematical models, the flow of public information is interpreted as a filtration. The models adapt asset prices, portfolio processes, and wealth processes to this filtration.
+
+\begin{definition}
+Let \((\Omega, \mathcal{F},\mathbb{P})\) be a probability space, let T be a fixed positive number, and let \(\mathcal{F}(t)\), \(0 \leq t \leq T\), be a filtration of sub-\(\sigma\)-algebras of \(\mathcal{F}\). Consider an adapted stochastic process \(M(t)\), \(0 \leq t \leq T\). If
+    
+    \[
+    \mathbb{E}[M(t) \mid \mathcal{F}(s)] = M(s) \text{ for all } 0 \leq s \leq t \leq T,
+    \]
+
+we say this process is a \textup{martingale}. It has no tendency to rise or fall.
+
+\end{definition}
+
+\subsection{Brownian Motion}
+
+\begin{definition}
+Let \((\Omega, \mathcal{F},\mathbb{P})\) be a probability space. For each \(w \in \Omega\), suppose that there is a continuous function \(W(t)\) of \(t \geq 0\) that satisfies \(W(0) = 0\) and that depends on \(w\). Then, \(W(t)\), \(t \geq 0\), is a \textup{Brownian motion} if for all \(0 = t_0 < t_1 < \cdots < t_m\) the increments
+    \begin{equation}
+    W(t_1) - W(t_0),\; W(t_2) - W(t_1),\; \ldots,\; W(t_m) - W(t_{m-1})
+    \end{equation}
+
+    are independent and each of these increments is normally distributed with
+
+    \begin{equation}
+    \mathbb{E}[W(t_{i+1}) - W(t_{i})] = 0
+    \end{equation}
+    \begin{equation}
+    \mathrm{Var}[W(t_{i+1}) - W(t_{i})] = t_{i+1} - t_i
+    \end{equation}
+
+\end{definition} 
+
+We will now highlight two key properties of Brownian motion.
+
+\begin{theorem}
+Brownian motion is a martingale.
+\end{theorem}
+
+\begin{proof}
+Let \(0 \leq s \leq t\) be given. Then
+    \begin{align*}
+    \mathbb{E}[W(t) \mid \mathcal{F}(s)] &= \mathbb{E}[W(t) - W(s) + W(s) \mid \mathcal{F}(s)] \\
+                                         &= \mathbb{E}[W(t) - W(s) \mid \mathcal{F}(s)] + \mathbb{E}[W(s) \mid \mathcal{F}(s)] \\
+                                         &= \mathbb{E}[W(t) - W(s)] + W(s) \\
+                                         &= W(s).
+    \end{align*}
+The second equality is linearity of conditional expectation. For the third: \(W(t) - W(s)\) is independent of \(\mathcal{F}(s)\), so conditioning drops; \(W(s)\) is \(\mathcal{F}(s)\)-measurable, so \(\mathbb{E}[W(s)\mid\mathcal{F}(s)] = W(s)\). The last equality uses \(\mathbb{E}[W(t)-W(s)] = 0\). See \cite[p.~98]{shreve2004}.
+\end{proof}
+
+
+\begin{theorem}
+Let W be a Brownian motion, and let \([W, W](T)\) denote the quadratic variation of W up to time T. Then \([W, W](T) = T\) for all \(T \geq 0\) almost surely.
+\end{theorem}
+
+\begin{proof}
+See \cite[p.~102]{shreve2004}.
+\end{proof}
+
+Brownian motion is the natural model for the random component of asset prices: its continuous paths, stationary independent increments, and Gaussian distribution are consistent with observed log-returns over short time intervals. The quadratic variation result \([W,W](T) = T\) is particularly important, as it encodes the heuristic \((\mathrm{d}W)^2 = \mathrm{d}t\) that drives Itô's formula in the next section.
+
+
+
+\subsection{It\^{o}'s Lemma}
+% TODO (Phase 1):
+%   - One-dimensional Ito's lemma for a function f(t, W_t).
+%   - Two-dimensional (bivariate) Ito's lemma for f(t, X_t, Y_t) with
+%     correlated Brownian motions -- this is the form needed for Heston.
+%   - State but do not prove; focus on how to apply it.
 
 \subsection{Risk-Neutral Pricing and Girsanov's Theorem}
-% TODO: change of measure, fundamental theorem of asset pricing, the
-% risk-neutral expectation formula  C = e^{-rT} E^Q[payoff].
+% TODO (Phase 2):
+%   - The no-arbitrage condition and the existence of a risk-neutral measure Q.
+%   - Girsanov's theorem: change of drift via change of measure.
+%   - The fundamental pricing formula: V_t = e^{-r(T-t)} E^Q[payoff | F_t].
+%   - Briefly state the Fundamental Theorem of Asset Pricing.
 
 
 % ===========================================================================
 \section{The Black--Scholes Model}
 % ===========================================================================
-% TODO: GBM, BS PDE, closed-form call formula, implied volatility, vol smile.
-% This section exists to motivate WHY we need stochastic vol.
+% This section exists to motivate WHY we need stochastic volatility.
+% End with the vol smile as an empirical contradiction of BS assumptions.
+
+\subsection{Geometric Brownian Motion}
+% TODO (Phase 1):
+%   - GBM dynamics: dS_t = mu S_t dt + sigma S_t dW_t.
+%   - Apply Ito's lemma to derive the log-normal distribution of S_T.
+
+\subsection{The Black--Scholes Formula}
+% TODO (Phase 1):
+%   - Sketch the risk-neutral pricing derivation of the BS call formula.
+%   - State the closed-form result; define d_1 and d_2.
+%   - Note the single key input: constant volatility sigma.
+
+\subsection{Implied Volatility and the Volatility Smile}
+% TODO (Phase 1):
+%   - Define implied volatility as the sigma that equates BS price to market price.
+%   - Show a real implied vol surface (SPX data): smile/skew across strikes,
+%     term structure across maturities.
+%   - Conclude: constant sigma cannot produce a smile -- BS is structurally
+%     wrong. This is the direct motivation for the Heston model.
 
 
+% ===========================================================================
+\section{The Heston Model}
+% ===========================================================================
+
+\subsection{Model Specification}
+% TODO (Phase 2):
+%   - State the two SDEs for S_t and v_t.
+%   - Define the correlation structure: dW^S dW^v = rho dt.
+%   - Explain intuitively what each equation captures.
+
+\subsection{Parameters}
+% TODO (Phase 2):
+%   - Table of all five parameters: kappa, theta, sigma, rho, v_0.
+%   - Explain the financial and statistical interpretation of each.
+%   - Note typical calibrated ranges for equity indices.
+
+\subsection{The Feller Condition}
+% TODO (Phase 2):
+%   - State: 2 kappa theta > sigma^2.
+%   - Prove (or sketch the proof) that this ensures v_t > 0 almost surely.
+%   - Discuss practical implications when it is violated in calibration.
+
+\subsection{Risk-Neutral Dynamics}
+% TODO (Phase 2):
+%   - Apply Girsanov's theorem to move from physical to risk-neutral measure.
+%   - State the risk-neutral SDEs used for pricing.
+%   - Note: kappa and theta are understood as risk-neutral parameters when
+%     calibrated directly to market prices.
+
+
+% ===========================================================================
+\section{The Characteristic Function}
+% ===========================================================================
+
+\subsection{Motivation and Affine Structure}
+% TODO (Phase 3):
+%   - Define the characteristic function phi(u) = E^Q[e^{iu log S_T} | F_t].
+%   - Explain why the affine structure of the Heston model allows a
+%     closed-form solution.
+
+\subsection{Derivation via Riccati ODEs}
+% TODO (Phase 3):
+%   - Assume phi = exp(A(u,tau) + B(u,tau) v_t), substitute into the
+%     Feynman-Kac PDE, separate terms.
+%   - Show that A and B satisfy a pair of Riccati ODEs.
+%   - Solve the ODEs to obtain the closed-form expressions for A and B.
+
+\subsection{The Numerically Stable Form}
+% TODO (Phase 3):
+%   - State the original Heston (1993) form.
+%   - Explain the branch-cut discontinuity causing numerical errors for
+%     long maturities (Albrecher et al. 2007).
+%   - State the corrected numerically stable form used in the implementation.
+
+
+% ===========================================================================
+\section{European Option Pricing via Fourier Methods}
+% ===========================================================================
+
+\subsection{Gil-Pelaez Fourier Inversion}
+% TODO (Phase 3):
+%   - Derive the call price as a Fourier integral over the characteristic
+%     function (Gil-Pelaez inversion formula).
+%   - Show how this reduces to a one-dimensional numerical integral.
+
+\subsection{The Carr--Madan FFT Method}
+% TODO (Phase 3):
+%   - Introduce the dampening factor alpha to ensure square-integrability.
+%   - Derive the modified pricing formula suitable for FFT evaluation.
+%   - Explain the FFT discretisation: grid spacing in frequency domain,
+%     resulting strike grid.
+%   - Discuss the speed advantage: pricing across a full strike grid
+%     simultaneously.
+
+
+% ===========================================================================
+\section{Monte Carlo Simulation}
+% ===========================================================================
+
+\subsection{Discretisation Scheme}
+% TODO (Phase 2):
+%   - Euler-Maruyama scheme for the joint (S_t, v_t) system.
+%   - Log-Euler scheme for S_t to prevent negative prices.
+%   - Simulation of correlated Brownian increments via Cholesky decomposition.
+
+\subsection{Variance Process Treatment}
+% TODO (Phase 2):
+%   - Problem: Euler-Maruyama can produce negative variance values.
+%   - Full truncation scheme: floor v_t at zero in the diffusion term.
+%   - Brief discussion of alternative schemes (reflection, QE) and why full
+%     truncation is used here.
+
+\subsection{Convergence and Validation}
+% TODO (Phase 3 / Phase 5):
+%   - Sanity checks: put-call parity, agreement with Fourier pricer.
+%   - Convergence of MC estimate as n_paths increases.
+%   - Standard error as a measure of Monte Carlo uncertainty.
+
+
+% ===========================================================================
+\section{Calibration to Market Data}
+% ===========================================================================
+
+\subsection{Problem Formulation}
+% TODO (Phase 4):
+%   - Define the calibration objective: minimise MSE between Heston-implied
+%     vols and market-implied vols across the observed surface.
+%   - Explain the choice of implied vol space over price space (equal
+%     weighting across strikes and maturities; scale-invariance).
+
+\subsection{Data and Preprocessing}
+% TODO (Phase 4):
+%   - Data source: SPY/SPX options chain via yfinance.
+%   - Filtering: non-zero bid, moneyness 0.85--1.15, 7--365 days to expiry.
+%   - Extraction of market implied vols using the Black-Scholes inverter.
+
+\subsection{Optimisation Strategy}
+% TODO (Phase 4):
+%   - Parameter bounds for each of the five parameters.
+%   - Global search via differential evolution to avoid local minima.
+%   - Local refinement via Nelder-Mead from the global solution.
+%   - Discussion of identifiability: which parameters are well-determined
+%     and which are degenerate.
+
+
+% ===========================================================================
+\section{Results and Analysis}
+% ===========================================================================
+
+\subsection{Calibrated Parameters}
+% TODO (Phase 5):
+%   - Table of calibrated parameter values on a specific date.
+%   - Check Feller condition; interpret each parameter financially.
+
+\subsection{Volatility Surface Fit}
+% TODO (Phase 5):
+%   - Side-by-side plots: market implied vol surface vs Heston fitted surface.
+%   - RMSE in implied vol space.
+%   - Discussion of where the model fits well (near ATM) and where it
+%     struggles (deep wings, short maturities).
+
+\subsection{Monte Carlo vs Fourier Pricing Comparison}
+% TODO (Phase 5):
+%   - Table comparing MC and Fourier prices across a range of strikes and
+%     maturities.
+%   - Confirm agreement within Monte Carlo standard errors.
+%   - Compare computation times.
+
+
+% ===========================================================================
+\section{Conclusion}
+% ===========================================================================
+% TODO (Phase 5):
+%   - Summarise what was built and what was found.
+%   - Reflect on the limitations of the Heston model (cannot fit short-dated
+%     wings perfectly; parameter instability over time).
+%   - Suggest natural extensions: rough volatility, jumps (Bates model),
+%     or multi-factor stochastic vol.
+
+
+% ===========================================================================
+\printbibliography
+% ===========================================================================
 
 \end{document}
