@@ -25,6 +25,7 @@
 \numberwithin{equation}{subsection}
 \numberwithin{definition}{subsection}
 \numberwithin{theorem}{subsection}
+\numberwithin{remark}{subsection}
 
 % --- Notation ---
 \newcommand{\E}{\mathbb{E}}
@@ -67,27 +68,27 @@ The definitions and notation in this section follow \textcite{shreve2004}, Chapt
 
 First, the probability measure.
 
-\begin{definition}
-Let \(\Omega\) be a nonempty set, \(\mathcal{F}\) be a \(\sigma\)-algebra of subsets of \(\Omega\), and \(\mathbb{P}\) be a probability measure over \(\mathcal{F}\). The triple \((\Omega, \mathcal{F},\mathbb{P})\) is called a \textup{probability space}.
+\begin{definition}[Probability Space]
+Let \(\Omega\) be a non-empty set, \(\mathcal{F}\) be a \(\sigma\)-algebra of subsets of \(\Omega\), and \(\mathbb{P}\) be a probability measure over \(\mathcal{F}\). The triple \((\Omega, \mathcal{F},\mathbb{P})\) is called a \textup{probability space}.
 \end{definition}
 
-\begin{definition}
+\begin{definition}[Almost Surely]
 Let \((\Omega, \mathcal{F},\mathbb{P})\) be a probability space. If a set \(A \in \mathcal{F}\) satisfies \(\mathbb{P}(A) = 1\), we say that the event A occurs \textup{almost surely}.
 \end{definition}
 
 We next formalise the concept of a stochastic process, the mathematical object used to model the random evolution of quantities such as asset prices.
 
-\begin{definition}
-Let \(\Omega\) be a nonempty set. Let T be a fixed positive number, and assume that for each \(t \in [0, T]\), there is a \(\sigma\)-algebra \(\mathcal{F}(t)\). Assume further that if \(s \leq t\), then every set in \(\mathcal{F}(s)\) is also in \(\mathcal{F}(t)\). Then we call the collection of \(\sigma\)-algebras \(\mathcal{F}(t)\), \(0 \leq t \leq T\), a \textup{filtration}.
+\begin{definition}[Filtration]
+Let \(\Omega\) be a non-empty set. Let T be a fixed positive number, and assume that for each \(t \in [0, T]\), there is a \(\sigma\)-algebra \(\mathcal{F}(t)\). Assume further that if \(s \leq t\), then every set in \(\mathcal{F}(s)\) is also in \(\mathcal{F}(t)\). Then we call the collection of \(\sigma\)-algebras \(\mathcal{F}(t)\), \(0 \leq t \leq T\), a \textup{filtration}.
 \end{definition}
 
-\begin{definition}
-Let \(\Omega\) be a nonempty sample space equipped with a filtration \(\mathcal{F}(t)\), \(0 \leq t \leq T\). Let \(X(t)\) be a collection of random variables indexed by \(t \in [0, T]\). We say this collection of random variables is an \textup{adapted stochastic process} if, for each t, the random variable \(X(t)\) is \(\mathcal{F}(t)\)-measurable.
+\begin{definition}[Adapted Stochastic Process]
+Let \(\Omega\) be a non-empty sample space equipped with a filtration \(\mathcal{F}(t)\), \(0 \leq t \leq T\). Let \(X(t)\) be a collection of random variables indexed by \(t \in [0, T]\). We say this collection of random variables is an \textup{adapted stochastic process} if, for each t, the random variable \(X(t)\) is \(\mathcal{F}(t)\)-measurable.
 \end{definition}
 
 In the context of continuous-time mathematical models, the flow of public information is interpreted as a filtration. The models adapt asset prices, portfolio processes, and wealth processes to this filtration.
 
-\begin{definition}
+\begin{definition}[Martingale]
 Let \((\Omega, \mathcal{F},\mathbb{P})\) be a probability space, let T be a fixed positive number, and let \(\mathcal{F}(t)\), \(0 \leq t \leq T\), be a filtration of sub-\(\sigma\)-algebras of \(\mathcal{F}\). Consider an adapted stochastic process \(M(t)\), \(0 \leq t \leq T\). If
     
     \[
@@ -100,7 +101,7 @@ we say this process is a \textup{martingale}. It has no tendency to rise or fall
 
 \subsection{Brownian Motion}
 
-\begin{definition}
+\begin{definition}[Brownian Motion]
 Let \((\Omega, \mathcal{F},\mathbb{P})\) be a probability space. For each \(w \in \Omega\), suppose that there is a continuous function \(W(t)\) of \(t \geq 0\) that satisfies \(W(0) = 0\) and that depends on \(w\). Then, \(W(t)\), \(t \geq 0\), is a \textup{Brownian motion} if for all \(0 = t_0 < t_1 < \cdots < t_m\) the increments
     \begin{equation}
     W(t_1) - W(t_0),\; W(t_2) - W(t_1),\; \ldots,\; W(t_m) - W(t_{m-1})
@@ -143,16 +144,124 @@ Let W be a Brownian motion, and let \([W, W](T)\) denote the quadratic variation
 See \cite[p.~102]{shreve2004}.
 \end{proof}
 
-Brownian motion is the natural model for the random component of asset prices: its continuous paths, stationary independent increments, and Gaussian distribution are consistent with observed log-returns over short time intervals. The quadratic variation result \([W,W](T) = T\) is particularly important, as it encodes the heuristic \((\mathrm{d}W)^2 = \mathrm{d}t\) that drives Itô's formula in the next section.
+Brownian motion is the natural model for the random component of asset prices: its continuous paths, stationary independent increments, and Gaussian distribution are consistent with observed log-returns over short time intervals. The quadratic variation result \([W,W](T) = T\) is of particular importance and demanded the development of It\^{o} calculus, as will be shown in the next section.
 
+\subsection{The It\^{o}-Doeblin Formula}
 
+We will now introduce the stochastic calculus developed by It\^{o}. The proofs in this section have been largely omitted due to their complexity with respect to the scope of this project.
 
-\subsection{It\^{o}'s Lemma}
-% TODO (Phase 1):
-%   - One-dimensional Ito's lemma for a function f(t, W_t).
-%   - Two-dimensional (bivariate) Ito's lemma for f(t, X_t, Y_t) with
-%     correlated Brownian motions -- this is the form needed for Heston.
-%   - State but do not prove; focus on how to apply it.
+To begin, we construct a mathematically rigorous representation of the value of a portfolio that results from trading assets in continuous time. 
+
+\begin{definition}[Simple Process]
+    Let T be a fixed positive number, and let \(\Delta(t)\) be an adapted stochastic process. Now let \(\Pi = \{t_0,t_1,\ldots,t_n\}\) be a partition of \([0, T]\). If \(\Delta(t)\) is constant in t on each subinterval \([t_j,t_{j+1})\), we say that \(\Delta(t)\) is a \textup{simple process}.
+\end{definition}
+
+\begin{definition}[It\^{o}'s Integral]
+    Fix a positive number T. Let \(\Delta(t)\) be an adapted stochastic process, and \(W(t)\), \(t \geq 0\) a Brownian motion. \textup{It\^{o}'s integral} is given by
+
+    \begin{equation}
+        \int_{0}^{T} \Delta(t) \, \mathrm{d} W(t)
+        \label{ito}
+    \end{equation}
+
+Which, for simple processes, is defined explicitly as
+\begin{equation}
+    I(t) = \sum_{j=0}^{k-1} \Delta(t_j)[W(t_{j+1}) - W(t_j)] + \Delta(t_k)[W(t) - W(t_k)]
+\end{equation}
+
+For the general case, we extend the integral as a limit of the integral of simple integrands in a fashion similar to that of the Lebesgue integral. (see \cite[p.~126]{shreve2004}).
+
+\end{definition}
+
+% Justify relevance?
+
+\begin{theorem}
+    The It\^{o} integral defined by \eqref{ito} is a martingale.
+\end{theorem}
+
+\begin{proof}
+    See \cite[p.~128]{shreve2004}.
+\end{proof}
+
+The following definition allows us to extend the calculus to stochastic processes more general than Brownian motion. Almost all stochastic processes are It\^{o} processes.
+
+\begin{definition}[It\^{o} Process]
+    Let \(W(t)\), \(t \geq 0\), be a Brownian motion, and let \(\mathcal{F}(t)\), \(t \geq 0\), be an associated filtration. An \textup{It\^{o} process} is a stochastic process of the form
+
+    \begin{equation}
+        X(t) = X(0) + \int_{0}^{t}\Delta(u) \, \mathrm{d}W(u) + \int_{0}^{t}\Theta(u) \, \mathrm{d}u
+        \label{ito process}
+    \end{equation}
+
+    where \(X(0)\) is non-random and \(\Delta(u)\) and \(\Theta(u)\) are adapted stochastic processes.
+    
+\end{definition}
+
+\begin{theorem}
+    The quadratic variation of the It\^{o} process \eqref{ito process} is
+
+    \begin{equation}
+        [X, X](t) = \int_0^t \Delta^2(u) \, \mathrm{d}u
+    \end{equation}
+    
+\end{theorem}
+
+\begin{proof}
+    See \cite[p.~143]{shreve2004}
+\end{proof}
+
+\begin{remark}
+    In particular, an Itô process with \(\Delta \not\equiv 0\) has non-zero quadratic variation, in contrast to differentiable functions, which have zero quadratic variation.
+\end{remark}
+
+The following theorem gives us a direct rule to differentiate expressions of the form \(f(W(t)\), where \(f(x)\) is a differentiable function and \(W(t)\) is a Brownian motion. The typical chain-rule fails here because the non-zero quadratic variation of the It\^{o} process introduces an additional term.
+
+\begin{theorem}[It\^{o}-Doeblin Formula]
+    Let \(X(t)\), \(t \geq 0\), be an It\^{o} process, and let \(f(t, x)\) be a function for which the partial derivatives \(f_t(t, x)\), \(f_x(t, x)\), and \(f_{xx}(t, x)\) are defined and continuous. Then, for every \(T \geq 0\),
+
+    \begin{equation}
+        f(T, X(T)) = f(0, X(0)) 
+        + \int_0^T \left(f_t + \Theta(t) f_x + \frac{1}{2}\Delta^2(t) f_{xx}\right)\mathrm{d}t 
+        + \int_0^T \Delta(t) f_x \, \mathrm{d}W(t)
+        \label{ito formula}
+    \end{equation}  
+\end{theorem}
+
+\begin{proof}
+    See \cite[p.~146]{shreve2004}.
+\end{proof}
+
+\begin{remark}
+    The formula given in \eqref{ito formula} is mathematically rigourous. However, in the derivation of stochastic differential equations, the theorem is typically given in differential notation:
+
+    \begin{equation}
+        \mathrm{d}f = \left(f_t + \Theta(t) f_x + \frac{1}{2}\Delta^2(t) f_{xx}\right)\mathrm{d}t 
+        + \Delta(t) f_x \, \mathrm{d}W(t)
+    \end{equation}
+    
+\end{remark}
+
+\begin{remark}
+    When \(\Delta(t) = 1\) and \(\Theta(t) = 0\), i.e. \(X(t) = W(t)\), we recover the equivalent formulation for a Brownian motion:
+
+    \begin{equation}
+        \mathrm{d}f = \left( f_t + \frac{1}{2}f_{xx} \right) \, \mathrm{d}t  + f_x \, \mathrm{d}W(t)
+    \end{equation}
+    
+\end{remark}
+
+In asset price modeling, we typically consider multiple variables. The Heston model in particular requires both asset price and instantaneous variance. For this reason, we extend It\^{o}-Doeblin for multiple processes.
+
+\begin{theorem}[Two-dimensional It\^{o}-Doeblin formula]
+    Let \(f(t, x, y)\) be a function whose partial derivatives \(f_t\), \(f_x\), \(f_y\), \(f_{xx}\), \(f_{xy}\), \(f_{yx}\), and \(f_{yy}\) are all defined and continuous. Let \(X(t)\) and \(Y(t)\) be It\^{o} processes. The two-dimensional \textup{It\^{o}-Doeblin formula in differential form} is
+    \begin{equation}
+        \mathrm{d}f(t, X, Y) = f_t \, \mathrm{d}t + f_x \, \mathrm{d}X + f_y \, \mathrm{d}Y + \frac{1}{2} f_{xx} \, \mathrm{d}X \, \mathrm{d}X + f_{xy} \, \mathrm{d}X \, \mathrm{d}Y + \frac{1}{2} f_{yy} \, \mathrm{d}Y \, \mathrm{d}Y
+    \end{equation}
+\end{theorem}
+
+\begin{proof}
+    See \cite[p.~167]{shreve2004}
+\end{proof}
 
 \subsection{Risk-Neutral Pricing and Girsanov's Theorem}
 % TODO (Phase 2):
