@@ -41,7 +41,6 @@ Writeup:
 - [x] §2.1 — Probability space, almost surely, filtration, adapted process, martingale
 - [x] §2.2 — Brownian motion definition, martingale theorem (with proof), quadratic variation theorem
 - [x] §2.3 — Itô's lemma (1D and 2D)
-- [ ] §2.4 — Risk-neutral pricing and Girsanov's theorem
 - [ ] §3 — Black-Scholes (GBM, formula, implied vol smile)
 
 Code: not started
